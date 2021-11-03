@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db.models import Q
-from store.models import Collection, Order, Product,OrderItem
+from django.db.models import Q,F,Value,Func
+from django.db.models.aggregates import Count,Min,Max,Sum,Avg 
+from store.models import Collection, Customer, Order, Product,OrderItem
 
 
 
@@ -32,3 +33,27 @@ def select_related(request):
     order=Order.objects.select_related('customer').order_by('-placed_at')[0:5]
  
     return render(request,'select_related.html',{'name':'select_realated','orders':order})
+def aggregate(request):
+    result=Product.objects.aggregate(count=Count('id'))
+    result1=Product.objects.filter(collection__id=1).aggregate(Count=Count('id'))
+    result2=Product.objects.aggregate(min_price=Min('unit_price'))
+
+    return render(request,'aggregate.html',{'result':result,'result1':result1,'result2':result2})
+
+def annotate(request):
+    full_name=Customer.objects.annotate(full_name=Func(F('first_name'),Value(''),F('last_name'),function='CONCAT '))
+    
+    
+    return render(request, 'annotate.html', {'full_name':full_name})
+
+def inserting_data(request):
+    #need to craeate a object 1st
+    collection=Collection()
+    # set the values to the firld
+    collection.title='video game'
+    collection.featured_product=Product(pk=1)
+    collection.save()
+
+    
+
+    return render(request,'inserting_data.html',{'name':'aravind'})     
