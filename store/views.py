@@ -1,26 +1,25 @@
 
 from django.db.models.aggregates import Count
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Collection, Product
 from .serializer import CollectionSerializer, ProductSerializer
+from store import serializer
 
 
+class ProductList(ListCreateAPIView):
+   
+    queryset= Product.objects.select_related('collection').all()
+    serializer_class= ProductSerializer
+    
+    def get_serializer_context(self):
+        return {'request': self.request}
 
-@api_view(['GET','POST'])
-def product_list(request):
-    if request.method=='GET':
-        query_set=Product.objects.select_related('collection').all()
-        serializer=ProductSerializer(query_set,many=True,context={'request': request})
-        return Response(serializer.data)
-    elif request.method=='POST':
-        serializer=ProductSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
-        
+
 
 '''
 handling the exception in traditional way if objectt does not exist
